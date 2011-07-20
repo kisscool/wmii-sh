@@ -1,0 +1,26 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: test
+desc: first bug is a test.
+type: :bugfix
+component: wmii-sh
+release: 
+reporter: KissCool <nobody@nowhere.org>
+status: :closed
+disposition: :fixed
+creation_time: 2011-07-20 12:26:42.676244 Z
+references: []
+
+id: 16786177397c31fa8a47a104284b1a3b8717be60
+log_events: 
+- - 2011-07-20 12:26:44.751911 Z
+  - KissCool <nobody@nowhere.org>
+  - created
+  - ""
+- - 2011-07-20 12:45:28.953896 Z
+  - KissCool <nobody@nowhere.org>
+  - commented
+  - what a bummer!
+- - 2011-07-20 12:46:49.393625 Z
+  - KissCool <nobody@nowhere.org>
+  - closed with disposition fixed
+  - no more test
