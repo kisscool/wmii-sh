@@ -35,6 +35,7 @@ In order to add a widget in your Wmii status bar, you need to enter the followin
 	add_widget $name $refresh_rate $position
 
 with the following arguments :
+
 * $name is the name of the widget (it is also the name of the function which defines it in wmiirc)
 * $refresh_rate is the number of seconds between each refresh of the widget visual informations. 0 means no refresh.
 * $position defines where the widget will be placed. The widget with the higher number will be at the absolute right of the screen.
