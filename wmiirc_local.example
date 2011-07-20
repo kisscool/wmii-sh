@@ -1,0 +1,8 @@
+export WMII_WALLPAPER='/home/kisscool/wallpapers/Scott_Pilgrim_WALLPAPER_by_MIRRORMASTER.jpg'
+
+# widgets executions
+# syntax :
+# add_widget $name $refresh_rate $position
+add_widget load 30 10
+add_widget mem 60 15
+add_widget time 1 60

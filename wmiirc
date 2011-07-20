@@ -7,7 +7,7 @@ wmiiscript=wmiirc # For wmii.sh
 # Configuration Variables
 ###############################################################################
 
-# if you want to change those defaults, you should dot it in the
+# if you want to change those defaults, you should do it in the
 # wmiirc_local config file
 
 MODKEY=Mod4
@@ -394,17 +394,22 @@ volume() {
 
 }
 
+###############################################################################
+# Local configuration
+###############################################################################
+
 # widgets cleanup
 for i in `wmiir ls /rbar/ | grep status`; do 
 	wmiir remove /rbar/$i
 done
 
+# todo : test if it can be executed from wmiirc_local
 # widgets executions
-add_widget load 30 10
-add_widget mem 60 15
+#add_widget load 30 10
+#add_widget mem 60 15
 #add_widget network 60 20
 #add_widget disk 120 30
-add_widget time 1 60
+#add_widget time 1 60
 
 # the local configuration is read here
 # local_events is here to be bypassed by 
