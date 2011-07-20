@@ -290,6 +290,24 @@ eval $(widget_handletext)
 #}
 #vol | wmiir write /rbar/vol
 
+###### note for future interactive widgets
+# * wimenu
+# yesno() {
+#   cat <<!
+# yes
+# no
+# !
+# }
+# yesno | wimenu -p "do you want to do something? (y/n)" &
+# * wmii9menu
+#  wmii9menu -- "Kill:wmiir xwrite /client/$1/ctl slay" "Plop:Plip"
+# helper :
+# clickmenu() {
+#   if res=$(wmii9menu -- "$@"); then
+#     eval "$res";
+#   fi
+# }
+
 disk() {
 	path=/
 	result=`df -h $path 2>/dev/null | tail -n 1 || df $path | tail -n 1`
