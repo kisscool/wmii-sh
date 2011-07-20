@@ -1,0 +1,18 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Add a weather widget
+desc: Because it would be so cool :)
+type: :feature
+component: wmii-sh
+release: 
+reporter: KissCool <nobody@nowhere.org>
+status: :unstarted
+disposition: 
+creation_time: 2011-07-20 13:12:58.475101 Z
+references: []
+
+id: 1423f8cc31c27777b15294160732a8ea2358189a
+log_events: 
+- - 2011-07-20 13:12:59.883081 Z
+  - KissCool <nobody@nowhere.org>
+  - created
+  - ""

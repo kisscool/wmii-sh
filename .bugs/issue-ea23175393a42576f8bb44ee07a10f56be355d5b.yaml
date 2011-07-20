@@ -1,0 +1,18 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Add a hotplug widget
+desc: It could prove to be seriously challenging, but it would probably be useful
+type: :feature
+component: wmii-sh
+release: 
+reporter: KissCool <nobody@nowhere.org>
+status: :unstarted
+disposition: 
+creation_time: 2011-07-20 13:13:50.815598 Z
+references: []
+
+id: ea23175393a42576f8bb44ee07a10f56be355d5b
+log_events: 
+- - 2011-07-20 13:13:52.001107 Z
+  - KissCool <nobody@nowhere.org>
+  - created
+  - ""

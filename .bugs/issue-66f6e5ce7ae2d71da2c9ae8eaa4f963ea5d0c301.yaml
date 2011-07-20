@@ -1,0 +1,18 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: auto-guessing of widget name in add_widget_handle()
+desc: find a POSIX way to guess the widget name in add_widget_handle() without having to give it as first argument
+type: :feature
+component: wmii-sh
+release: 
+reporter: KissCool <nobody@nowhere.org>
+status: :unstarted
+disposition: 
+creation_time: 2011-07-20 13:10:05.578608 Z
+references: []
+
+id: 66f6e5ce7ae2d71da2c9ae8eaa4f963ea5d0c301
+log_events: 
+- - 2011-07-20 13:10:08.101954 Z
+  - KissCool <nobody@nowhere.org>
+  - created
+  - ""

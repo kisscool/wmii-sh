@@ -1,0 +1,18 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Add a mocp widget
+desc: Because music is good for you
+type: :feature
+component: wmii-sh
+release: 
+reporter: KissCool <nobody@nowhere.org>
+status: :unstarted
+disposition: 
+creation_time: 2011-07-20 13:14:22.768036 Z
+references: []
+
+id: dbf131e6815e4bdc719b779dee48f37a58df152a
+log_events: 
+- - 2011-07-20 13:14:26.625638 Z
+  - KissCool <nobody@nowhere.org>
+  - created
+  - ""
