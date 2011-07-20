@@ -1,4 +1,5 @@
 ## VIM
 *.swp
-# wmiirc_local
+# wmiirc_local and history files
 wmiirc_local
+history.*
