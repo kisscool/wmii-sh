@@ -1,0 +1,666 @@
+#!/bin/sh -f
+# Configure wmii
+wmiiscript=wmiirc # For wmii.sh
+. wmii.sh
+
+###############################################################################
+# Configuration Variables
+###############################################################################
+
+MODKEY=Mod4
+UP=k
+DOWN=j
+LEFT=h
+RIGHT=l
+
+# Bars
+noticetimeout=5
+noticebar=/rbar/!notice
+
+# Colors tuples: "<text> <background> <border>"
+# default theme
+#export WMII_NORMCOLORS='#000000 #c1c48b #81654f'
+#export WMII_FOCUSCOLORS='#000000 #81654f #000000'
+
+# blue and smoke
+#export WMII_NORMCOLORS='#888888 #222222 #333333'
+#export WMII_FOCUSCOLORS='#ffffff #285577 #4C7899'
+
+# crystal shining style
+#export WMII_NORMCOLORS='#cccccc #004050 #002030'
+#export WMII_FOCUSCOLORS='#fefefe #307080 #5090a0'
+
+# bluedark style
+export WMII_NORMCOLORS='#BBBBBB #222222 #000000'
+export WMII_FOCUSCOLORS='#EEEEEE #005577 #006699'
+
+# background is used in the absence of a wallpaper
+export WMII_BACKGROUND='#333333'
+export WMII_WALLPAPER='/home/kisscool/wallpapers/Scott_Pilgrim_WALLPAPER_by_MIRRORMASTER.jpg'
+#export WMII_FONT='-*-fixed-medium-r-*-*-13-*-*-*-*-*-*-*'
+export WMII_FONT='xft:-*-fixed-medium-r-*-*-13-*-*-*-*-*-*-*'
+
+set -- $(echo $WMII_NORMCOLORS $WMII_FOCUSCOLORS)
+export WMII_TERM="xterm"
+
+#if ! test -d "${WMII_CONFPATH%%:*}"; then
+#    mkdir "${WMII_CONFPATH%%:*}"
+#    res=$(wihack -type DIALOG xmessage -nearmouse -buttons Windows,Alt -print -fn $WMII_FONT \
+#          "Welcome to wmii,$wi_newline$wi_newline" \
+#          "Most of wmii's default key bindings make use of the$wi_newline" \
+#          "Windows key, or equivalent. For keyboards lacking such$wi_newline" \
+#          "a key, many users change this to the Alt key.$wi_newline$wi_newline" \
+#          "Which would you prefer?")
+#    [ "$res" = "Alt" ] && MODKEY=Mod1
+#    echo "MODKEY=$MODKEY" >"${WMII_CONFPATH%%:*}/wmiirc_local"
+#    chmod +x "${WMII_CONFPATH%%:*}/wmiirc_local"
+#fi
+
+# Menu history
+hist="${WMII_CONFPATH%%:*}/history"
+histnum=5000
+
+###############################################################################
+# Rules
+###############################################################################
+
+# Column Rules
+wmiir write /colrules <<!
+/gimp/ -> 17+83+41
+/.*/ -> 62+38 # Golden Ratio
+!
+
+# Tagging Rules
+wmiir write /tagrules <<!
+/MPlayer|VLC/ -> ~
+/gimp/ -> ~
+/Chrome/ -> sel
+!
+
+###############################################################################
+# Helpers
+###############################################################################
+
+# this variable holds the list of all defined widgets in the
+# form 'position-name'
+# ex : '2-clock 23-status 10-load'
+WIDGETS=''
+
+# generic helper to add a widget
+# arguments :
+# - $1 : name of the widget / function
+# - $2 : refresh rate of the widget, 0 for no refresh
+# - $3 : position of the widget among others
+# ex : add_widget load 30 10
+add_widget() {
+	# needed for sub-functions definition, I suspect either black magic or a race condition here
+	$1 >/dev/null
+	# creation of the widget
+	echo $WMII_NORMCOLORS $1 | wmiir create /rbar/status-$3-$1
+	# update of the $WIDGETS list
+	export WIDGETS="$WIDGETS $3-$1"
+	# widget generic loop
+	while $1 | wmiir write /rbar/status-$3-$1 && [ $2 -ne 0 ] ; do #hack possible while echo `eval $2` | ...
+		sleep $2
+	done &
+}
+
+# this function is to be used inside a widget function definition
+# it defines a widget_handle_$name with $name equal to the name
+# of the widget, which contains the event handling of user interactions
+# with the widget.
+# arguments :
+# - $1 : name of the widget
+# ex :
+#     add_widget_handle clock <<!
+#         terminal -hold -e cal -3 &
+#     !
+#
+#     add_widget_handle vol <<!
+#         case $1 in      # Which mouse button
+#             1)          # Left button
+#                 amixer sset Master toggle
+#                 vol | wmiir write /rbar/vol;;
+#             4)          # Scroll up
+#                 amixer sset Master playback 2dB+
+#                 vol | wmiir write /rbar/vol;;
+#             5)          # Scroll down
+#                 amixer sset Master playback 2dB-
+#                 vol | wmiir write /rbar/vol;;
+#         esac
+#     !
+add_widget_handle() {
+export widget_handle_$name
+        content=`cat /dev/stdin`;
+        name=$1;
+	# this is seriously mad but it works
+	# we auto-generate a new function without knowing
+	# in advance its content or even its name
+	# don't do this at home, kids
+        eval "
+widget_handle_$name() { 
+cat <<!
+$content
+!
+} "
+}
+
+
+# this function is a modified copy/paste of _wi_script() from wmii.sh
+# in order to auto-generate the code to handle user Events related to widgets.
+event_rbar_handle() {
+	# Awk script to mangle key/event/action definition spec
+	# into switch-case functions and lists of the cases. Also
+	# generates a simple key binding help text based on KeyGroup
+	# clauses and comments that appear on key lines.
+	#
+	# Each clause (Key, Event, Action) generates a function of the
+	# same name which executes the indented text after the matching
+	# clause. Clauses are selected based on the first argument passed
+	# to the mangled function. Additionally, a variable is created named
+	# for the plouralized version of the clause name (Keys, Events,
+	# Actions) which lists each case value. These are used for actions
+	# menus and to write wmii's /keys file.
+	cat <<'!'
+	BEGIN {
+		arg[1] = "Nop"
+		narg = 1;
+		body = "";
+		keyhelp = ""
+	}
+	function quote(s) {
+		gsub(/'/, "'\\''", s)
+		return "'" s "'"
+	}
+	function addevent() {
+		var = arg[1] "s"
+		for(i=2; i <= narg; i++) {
+			if(body == "")
+				delete a[arg[1],arg[i]]
+			else
+				a[arg[1],arg[i]] = body
+			if(i == 2) {
+				# There's a bug here. Can you spot it?
+				gsub("[^a-zA-Z_0-9]", "_", arg[2]);
+				body = sprintf("%s %s \"$@\"", arg[1], arg[2])
+			}
+		}
+	}
+#	/^(Key)Group[ \t]/ {
+#		sub(/^[^ \t]+[ \t]+/, "")
+#		keyhelp = keyhelp "\n  " $0 "\n"
+#	}
+	/^(Event|Key|Action|Menu)[ \t]/ {
+		addevent()
+		split($0, tmp, /[ \t]+#[ \t]*/)
+		narg = split(tmp[1], arg)
+#		if(arg[1] == "Key" && tmp[2])
+#			for (i=2; i <= narg; i++)
+#				keyhelp = keyhelp sprintf("    %-20s %s\n",
+#					        arg[i], tmp[2])
+		body = ""
+	}
+#	/^[ \t]/ {
+#		sub(/^(        |\t)/, "")
+#		body = body"\n"$0
+#	}
+	!/Event/ {
+		sub(/^(        |\t)/, "")
+		body = body"\n"$0
+	}
+
+	END {
+		addevent()
+		for(k in a) {
+			split(k, b, SUBSEP)
+			c[b[1]] = c[b[1]] b[2] "\n"
+			if(body != "")
+				d[b[1]] = d[b[1]] quote(b[2]) ")" a[k] "\n;;\n"
+		}
+		for(k in c)
+			#printf "%ss=%s\n", k, quote(c[k])
+		for(k in d) {
+			#printf "%s() {\n", k
+			#printf " %s=$1; shift\n", tolower(k)
+			printf "case $2 in\n%s\n*) return 1\n;;\nesac\n", d[k]
+			#printf "}\n"
+		}
+		#print "KeysHelp=" quote(keyhelp)
+	}
+!
+}
+
+# the function widget_handletext()
+# is only to be used as an action after
+# Event RightBarMouseDown
+# it will aggregate every widget_handle_$name functions
+# in a big case like the following example :
+# case $2 in
+#      '2-clock')
+#        ...
+#      ;;
+#      '23-status')
+#        ...
+#      ;;
+#      '10-load')
+#        ...
+#      ;;
+#      *) return 1
+# esac
+#
+# the function widget_handletext()
+# is only here in order to make widget_handle() easier to read
+# and debug
+widget_handletext(){
+for i in $WIDGETS; do
+	# we add an Event marker as a separator
+	# for the event_rbar_handle() function
+	cat <<!
+Event status-$i
+!
+	# there is surely a better solution but I am quite lazy today
+	name=`echo $i | awk -F- '{print $2}'`
+	type widget_handle_$name >/dev/null 2>&1
+	[ $? -eq 0 ] && widget_handle_$name
+done | awk "$(event_rbar_handle)"
+}
+
+widget_handle() {
+cat <<! 
+$(widget_handletext)
+!
+eval $(widget_handletext)
+}
+
+
+###############################################################################
+# Widgets
+###############################################################################
+
+# Status Bar Info
+#status() {
+#	echo -n $(uptime | sed 's/.*://; s/,//g') '|' $(date '+%a %d, %b; %X')
+#}
+#action status &
+
+
+# Clock
+#echo '#000000 #ffffff #000000' clock | wmiir create /rbar/zclock        # Create the widget
+#clock() {
+#	echo $(date '+%a %d, %b; %X')
+#}
+#while clock | wmiir write /rbar/zclock; do
+#	sleep 1
+#done &
+
+# Volume
+#echo $WMII_NORMCOLORS vol | wmiir create /rbar/vol
+#vol() {
+#	#echo vol
+#	echo vol $(amixer get Master | grep % | sed 's/.*\[\(.*\%\)\].*/\1/') %
+#}
+#vol | wmiir write /rbar/vol
+
+disk() {
+	path=/
+	result=`df -h $path 2>/dev/null | tail -n 1 || df $path | tail -n 1`
+	# monitored_path ◓ used_percentage ◌ free_size
+	echo $result | awk '{print $6, "◓", $5, "◌",$4}'
+}
+
+load() {
+	critical=1.5
+	high=0.75
+	case `uname -s` in
+		Linux)
+			load=`awk '{print $1, $2, $3}' /proc/loadavg`
+			;;
+		FreeBSD)
+			load=`sysctl -h -n vm.loadavg | awk '{print $2, $3, $4}'`
+			;;
+		*)
+			echo 'OS not supported'
+			return
+			;;
+	esac
+	# todo : gestion de la couleur
+	# todo : gestion des actions : dialog `ps ux --sort=-pcpu,-vsz || ps ux`
+	echo "⚑" $load
+
+	add_widget_handle load <<'!'
+		dialog --msgbox "\\\`ps ux --sort=-pcpu,-vsz || ps ux\\\`" 0 0
+!
+}
+
+mem() {
+	case `uname -s` in
+		Linux)
+			mem=`free -m | awk '/cache:/ {printf "%i %i ", $3, $4} /Swap/ {printf "%i", $3}'`
+			;;
+		FreeBSD)
+			mem=`top -d1 -n | awk '/Mem:/ {sub("M", "", $4) ; sub("M", "", $6) ; sub("M", "", $8) ; sub("M", "", $10) ; sub("M", "", $12) ; printf "%i %i ", $2, $4+$6+$8+$10+$12} /Swap:/ {printf "%i", $4}'`
+			;;
+		*)
+			echo 'OS not supported'
+			return
+			;;
+	esac
+	# todo : gestion de la couleur
+	# todo : gestion des actions : dialog `ps ux --sort=-pcpu,-vsz || ps ux`
+	# mem ◓ active ◌ free ◉ swap
+	echo $mem | awk '{printf "mem ◓ %iM ◌ %iM ◉ %iM", $1, $2, $3}'
+}
+
+network() {
+	interface='eth0'
+	network_data=`LANG=C ifconfig $interface | awk 'BEGIN { FS = "[()\t]"; } /RX bytes:/ {print $2, $4}'`
+	# monitored_interface ➘ rx_total ➚ tx_total
+	echo $network_data | awk '{printf "'$interface' ➘ %.2f%s ➚ %.2f%s", $1, $2, $3, $4}'
+}
+
+power() {
+	battery='BAT0'
+	BAT_INFO_FILE = "/proc/acpi/battery/$battery/info"
+	BAT_STATE_FILE = "/proc/acpi/battery/$battery/state"
+	# todo : finir en testant sur portable
+	# iconesi intéressantes : 2000 et quelques
+	# ex : ⚡
+}
+
+temperature() {
+	case `uname -s` in
+		Linux)
+			temperature=`sensors | awk '/Core/ {print $1, $2, $3}'`
+			;;
+		FreeBSD)
+			temperature=`sysctl dev.cpu | grep temperature`
+			;;
+		*)
+			echo 'OS not supported'
+			return
+			;;
+	esac
+	echo "☕" $temperature
+}
+
+time() {
+	echo "◔" $(date '+%a %d, %b; %R')
+	# todo action : dialog `cal`.sub(/\b#{Time.now.day}\b/) {|s| '-' * s.length }
+}
+
+volume() {
+	case `uname -s` in
+		Linux)
+			vol=`amixer get Master | grep % | sed 's/.*\[\(.*\%\)\].*/\1/'`
+			;;
+		FreeBSD)
+			vol=`mixer mixer`
+			;;
+		*)
+			echo 'OS not supported'
+			return
+			;;
+	esac
+	echo "♪ " $vol%
+
+}
+
+# widgets cleanup
+for i in `wmiir ls /rbar/ | grep status`; do 
+	wmiir remove /rbar/$i
+done
+
+# widgets executions
+add_widget load 30 10
+add_widget mem 60 15
+#add_widget network 60 20
+#add_widget disk 120 30
+add_widget time 1 60
+
+# the local configuration is read here
+# local_events is here to be bypassed by 
+# the content of wmiirc_local
+local_events() { true;}
+wi_runconf -s wmiirc_local
+
+echo $WMII_NORMCOLORS | wmiir create $noticebar
+
+
+###############################################################################
+# Event processing
+###############################################################################
+
+events() {
+	cat <<'!'
+# Events
+Event CreateTag
+	echo "$WMII_NORMCOLORS" "$@" | wmiir create "/lbar/$@"
+Event DestroyTag
+	wmiir remove "/lbar/$@"
+Event FocusTag
+	wmiir xwrite "/lbar/$@" "$WMII_FOCUSCOLORS" "$@"
+Event UnfocusTag
+	wmiir xwrite "/lbar/$@" "$WMII_NORMCOLORS" "$@"
+Event UrgentTag
+	shift
+	wmiir xwrite "/lbar/$@" "*$@"
+Event NotUrgentTag
+	shift
+	wmiir xwrite "/lbar/$@" "$@"
+Event LeftBarClick LeftBarDND
+	shift
+	wmiir xwrite /ctl view "$@"
+Event Unresponsive
+	{
+		client=$1; shift
+		msg="The following client is not responding. What would you like to do?$wi_newline"
+		resp=$(wihack -transient $client \
+			      xmessage -nearmouse -buttons Kill,Wait -print
+			      -fn "${WMII_FONT%%,*}" "$msg $(wmiir read /client/sel/label)")
+		if [ "$resp" = Kill ]; then
+			wmiir xwrite /client/$client/ctl slay &
+		fi
+	}&
+Event Notice
+	wmiir xwrite $noticebar $wi_arg
+
+	kill $xpid 2>/dev/null # Let's hope this isn't reused...
+	{ sleep $noticetimeout; wmiir xwrite $noticebar ' '; }&
+	xpid = $!
+
+# Menus
+Menu Client-3-Delete
+	wmiir xwrite /client/$1/ctl kill
+Menu Client-3-Kill
+	wmiir xwrite /client/$1/ctl slay
+Menu Client-3-Fullscreen
+	wmiir xwrite /client/$1/ctl Fullscreen on
+Event ClientMouseDown
+	wi_fnmenu Client $2 $1 &
+
+Menu LBar-3-Delete
+	tag=$1; clients=$(wmiir read "/tag/$tag/index" | awk '/[^#]/{print $2}')
+	for c in $clients; do
+		if [ "$tag" = "$(wmiir read /client/$c/tags)" ]; then
+			wmiir xwrite /client/$c/ctl kill
+		else
+			wmiir xwrite /client/$c/tags -$tag
+		fi
+		if [ "$tag" = "$(wi_seltag)" ]; then
+			newtag=$(wi_tags | awk -v't='$tag '
+				$1 == t { if(!l) getline l
+					  print l
+					  exit }
+				{ l = $0 }')
+			wmiir xwrite /ctl view $newtag
+		fi
+	done
+Event LeftBarMouseDown
+	wi_fnmenu LBar "$@" &
+
+Event RightBarMouseDown
+	widget_handle "$@"
+#	case $2 in
+#	vol)
+#		case $1 in      # Which mouse button
+#		1)              # Left button
+#			amixer sset Master toggle
+#			vol | wmiir write /rbar/vol;;
+#		4)		# Scroll up
+#			amixer sset Master playback 2dB+
+#			vol | wmiir write /rbar/vol;;
+#		5)		# Scroll down
+#			amixer sset Master playback 2dB-
+#			vol | wmiir write /rbar/vol;;
+#		esac;;
+#
+#	zclock)
+#		terminal -hold -e cal -3 &;;
+#	esac
+
+
+# Actions
+Action showkeys
+	echo "$KeysHelp" | xmessage -file - -fn ${WMII_FONT%%,*}
+Action quit
+	wmiir xwrite /ctl quit
+Action exec
+	wmiir xwrite /ctl exec "$@"
+Action rehash
+	wi_proglist $PATH >$progsfile
+Action status
+	set +xv
+	if wmiir remove /rbar/status 2>/dev/null; then
+		sleep 2
+	fi
+	echo "$WMII_NORMCOLORS" | wmiir create /rbar/status
+	while status | wmiir write /rbar/status; do
+		sleep 1
+	done
+
+# Key Bindings
+KeyGroup Moving around
+Key $MODKEY-$LEFT   # Select the client to the left
+	wmiir xwrite /tag/sel/ctl select left
+Key $MODKEY-$RIGHT  # Select the client to the right
+	wmiir xwrite /tag/sel/ctl select right
+Key $MODKEY-$UP     # Select the client above
+	wmiir xwrite /tag/sel/ctl select up
+Key $MODKEY-$DOWN   # Select the client below
+	wmiir xwrite /tag/sel/ctl select down
+
+Key $MODKEY-space   # Toggle between floating and managed layers
+	wmiir xwrite /tag/sel/ctl select toggle
+
+KeyGroup Moving through stacks
+Key $MODKEY-Control-$UP    # Select the stack above
+	wmiir xwrite /tag/sel/ctl select up stack
+Key $MODKEY-Control-$DOWN  # Select the stack below
+	wmiir xwrite /tag/sel/ctl select down stack
+
+KeyGroup Moving clients around
+Key $MODKEY-Shift-$LEFT   # Move selected client to the left
+	wmiir xwrite /tag/sel/ctl send sel left
+Key $MODKEY-Shift-$RIGHT  # Move selected client to the right
+	wmiir xwrite /tag/sel/ctl send sel right
+Key $MODKEY-Shift-$UP     # Move selected client up
+	wmiir xwrite /tag/sel/ctl send sel up
+Key $MODKEY-Shift-$DOWN   # Move selected client down
+	wmiir xwrite /tag/sel/ctl send sel down
+
+Key $MODKEY-Shift-space   # Toggle selected client between floating and managed layers
+	wmiir xwrite /tag/sel/ctl send sel toggle
+
+KeyGroup Client actions
+Key $MODKEY-f # Toggle selected client's fullsceen state
+	wmiir xwrite /client/sel/ctl Fullscreen toggle
+Key $MODKEY-Shift-c # Close client
+	wmiir xwrite /client/sel/ctl kill
+
+KeyGroup Changing column modes
+Key $MODKEY-d # Set column to default mode
+	wmiir xwrite /tag/sel/ctl colmode sel default-max
+Key $MODKEY-s # Set column to stack mode
+	wmiir xwrite /tag/sel/ctl colmode sel stack-max
+Key $MODKEY-m # Set column to max mode
+	wmiir xwrite /tag/sel/ctl colmode sel stack+max
+
+KeyGroup Running programs
+Key $MODKEY-a      # Open wmii actions menu
+	action $(wi_actions | wimenu -h "${hist}.actions" -n $histnum) &
+Key $MODKEY-p      # Open program menu
+	eval wmiir setsid "$(wimenu -h "${hist}.progs" -n $histnum <$progsfile)" &
+
+Key $MODKEY-Return # Launch a terminal
+	eval wmiir setsid $WMII_TERM &
+
+KeyGroup Other
+Key $MODKEY-Control-t # Toggle all other key bindings
+	case $(wmiir read /keys | wc -l | tr -d ' \t\n') in
+	0|1)
+		echo -n "$Keys" | wmiir write /keys
+		wmiir xwrite /ctl grabmod $MODKEY;;
+	*)
+		wmiir xwrite /keys $MODKEY-Control-t
+		wmiir xwrite /ctl grabmod Mod3;;
+	esac
+
+KeyGroup Tag actions
+Key $MODKEY-t       # Change to another tag
+	(tag=$(wi_tags | wimenu -h "${hist}.tags" -n 50) && wmiir xwrite /ctl view $tag) &
+Key $MODKEY-Shift-t # Retag the selected client
+	c=$(wi_selclient)
+	(tag=$(wi_tags | wimenu -h "${hist}.tags" -n 50) && wmiir xwrite /client/$c/tags $tag) &
+!
+	for i in 0 1 2 3 4 5 6 7 8 9; do
+		cat <<!
+Key $MODKEY-$i		 # Move to the numbered view
+	wmiir xwrite /ctl view "$i"
+Key $MODKEY-Shift-$i     # Retag selected client with the numbered tag
+	wmiir xwrite /client/sel/tags "$i"
+!
+	done
+}
+wi_events events local_events
+
+
+###############################################################################
+# Application of configuration
+###############################################################################
+
+# WM Configuration
+wmiir write /ctl <<!
+	font $WMII_FONT
+	focuscolors $WMII_FOCUSCOLORS
+	normcolors $WMII_NORMCOLORS
+	grabmod $MODKEY
+	border 1
+	bar on top
+!
+
+# we try to set the wallpaper with feh and fall back
+# to a simple background if a problem arise
+feh --bg-scale "$WMII_WALLPAPER" &
+[ $? -ne 0 ] && xsetroot -solid "$WMII_BACKGROUND" &
+
+# Misc
+progsfile="$(wmiir namespace)/.proglist"
+#action status &
+wi_proglist $PATH >$progsfile &
+
+# Setup Tag Bar
+IFS="$wi_newline"
+wmiir rm $(wmiir ls /lbar | sed 's,^,/lbar/,') >/dev/null
+seltag=$(wmiir read /tag/sel/ctl | sed 1q)
+unset IFS
+wi_tags | while read tag
+do
+	if [ "$tag" = "$seltag" ]; then
+		echo "$WMII_FOCUSCOLORS" "$tag"
+	else
+		echo "$WMII_NORMCOLORS" "$tag"
+	fi | wmiir create "/lbar/$tag"
+done
+
+wi_eventloop
+
