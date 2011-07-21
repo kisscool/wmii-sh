@@ -5,6 +5,14 @@ This is a [`Wmii`](http://wmii.suckless.org/) configuration file customized to a
 
 You can easily bypass my personnal configuration variables by writing yours in wmiirc_local
 
+Why?
+----
+
+Short answer : because I can.
+
+Long answer : I really like the concept of being able to control my Window Manager the way Wmii allows me to do it. I really like its ability to be customized in a purely language-agnostic way. It is powerful, it is simple, it is the kind of well conceived interfaces that make me love UNIX so much. I could have used a language more suited for the job, like the excellent [`wmiirc project`](http://github.com/sunaku/wmiirc) did with ruby, but I liked the idea to keep the raw UNIXy feeling of a Bourne Shell script.
+In fact I encourage you strongly to go check alternative solutions if you are purely interested in the end result : they bring more configuration possibilities and they are generally more mature than this little pet project of mine. But if you like the concept of configuring Wmii through pure shell, then you could find something interesting here.
+
 How to use Wmii-SH
 ------------------
 
