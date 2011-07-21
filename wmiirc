@@ -19,6 +19,7 @@ RIGHT=l
 # Bars
 noticetimeout=5
 noticebar=/rbar/!notice
+statusbar_position='top'
 
 # Colors tuples: "<text> <background> <border>"
 # default theme
@@ -95,7 +96,7 @@ add_widget() {
 }
 
 # this function is to be used inside a widget function definition
-# it defines a widget_handle_$name with $name equal to the name
+# it defines a widget_handle_$name() with $name equal to the name
 # of the widget, which contains the event handling of user interactions
 # with the widget.
 # arguments :
@@ -122,7 +123,7 @@ add_widget_handle() {
 export widget_handle_$name
         content=`cat /dev/stdin`;
         name=$1;
-	# this is seriously mad but it works
+	# this is seriously mad, but it works !
 	# we auto-generate a new function without knowing
 	# in advance its content or even its name
 	# don't do this at home, kids
@@ -421,14 +422,6 @@ for i in `wmiir ls /rbar/ | grep status`; do
 	wmiir remove /rbar/$i
 done
 
-# todo : test if it can be executed from wmiirc_local
-# widgets executions
-#add_widget load 30 10
-#add_widget mem 60 15
-#add_widget network 60 20
-#add_widget disk 120 30
-#add_widget time 1 60
-
 # the local configuration is read here
 # local_events is here to be bypassed by 
 # the content of wmiirc_local
@@ -647,7 +640,7 @@ wmiir write /ctl <<!
 	normcolors $WMII_NORMCOLORS
 	grabmod $MODKEY
 	border 1
-	bar on top
+	bar on $statusbar_position
 !
 
 # we try to set the wallpaper with feh and fall back
