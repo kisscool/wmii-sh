@@ -64,6 +64,7 @@ wmiir write /colrules <<!
 wmiir write /tagrules <<!
 /MPlayer|VLC/ -> ~
 /gimp/ -> ~
+/xmessage/ -> ~
 /Chrome/ -> sel
 !
 
@@ -336,7 +337,7 @@ load() {
 	echo "⚑" $load
 
 	add_widget_handle load <<'!'
-		dialog --msgbox "\\\`ps ux --sort=-pcpu,-vsz || ps ux\\\`" 0 0
+		top -b -n 1 | head -n 18 | sed 's/:/ /g' | xmessage -file - -nearmouse
 !
 }
 
