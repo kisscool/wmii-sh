@@ -22,7 +22,7 @@ First of all, clone this repository on your desktop
 
 	$ git clone http://github.com/kisscool/wmii-sh.git ~/.wmii
 
-Then copy the wmiirc_local.example file and customize it to follow your needs
+Then copy the wmiirc_local.example file and customize it according to your needs
 
 	$ cd ~/.wmii
 	$ cp wmiirc_local.example wmiirc_local
@@ -38,7 +38,7 @@ Juste upgrade the repository like you would do with a normal git project. The .g
 
 ### Configuring Widgets
 
-In order to add a widget in your Wmii status bar, you need to enter the following linke in wmiirc_local :
+In order to add a widget in your Wmii status bar, you need to enter the following line in wmiirc_local :
 
 	add_widget $name $refresh_rate $position
 
