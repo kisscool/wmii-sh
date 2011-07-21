@@ -317,9 +317,11 @@ disk() {
 	echo $result | awk '{print $6, "◓", $5, "◌",$4}'
 }
 
+# this widget displays the local system load average
 load() {
-	critical=1.5
-	high=0.75
+	# limit for changing color
+	critical=5
+	# we get the load average
 	case `uname -s` in
 		Linux)
 			load=`awk '{print $1, $2, $3}' /proc/loadavg`
@@ -332,10 +334,13 @@ load() {
 			return
 			;;
 	esac
-	# todo : gestion de la couleur
-	# todo : gestion des actions : dialog `ps ux --sort=-pcpu,-vsz || ps ux`
-	echo "⚑" $load
+	# we change the color of the widget if we are above the critical value
+	[ `$load | awk '{print $2}'` -gt $critical ] && color=$WMII_FOCUSCOLORS || color=$WMII_NORMCOLORS
+	
+	# then we display the widget
+	echo $color "⚑" $load
 
+	# we define the user event handler
 	add_widget_handle load <<'!'
 		top -b -n 1 | head -n 18 | sed 's/:/ /g' | xmessage -file - -nearmouse
 !
