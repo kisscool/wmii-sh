@@ -335,7 +335,9 @@ load() {
 			;;
 	esac
 	# we change the color of the widget if we are above the critical value
-	[ `$load | awk '{print $2}'` -gt $critical ] && color=$WMII_FOCUSCOLORS || color=$WMII_NORMCOLORS
+	load_5=`echo $load | awk '{print $2}'`
+	greater=`echo "$load_5 > $critical" | bc`
+	[ $greater -eq 1 ] && color=$WMII_FOCUSCOLORS || color=$WMII_NORMCOLORS
 	
 	# then we display the widget
 	echo $color "⚑" $load
