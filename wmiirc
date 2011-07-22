@@ -310,6 +310,10 @@ eval $(widget_handletext)
 #   fi
 # }
 
+###### disk
+# show  : used percentage and free size of a mount point
+# mouse : none (todo?)
+# alert : none (todo?)
 disk() {
 	path=/
 	result=`df -h $path 2>/dev/null | tail -n 1 || df $path | tail -n 1`
@@ -317,7 +321,10 @@ disk() {
 	echo $result | awk '{print $6, "◓", $5, "◌",$4}'
 }
 
-# this widget displays the local system load average
+###### load
+# show  : local system load average
+# mouse : show top cpu hungry processes
+# alert : when the medium load average is above a critical threshold
 load() {
 	# limit for changing color
 	critical=5
@@ -348,6 +355,10 @@ load() {
 !
 }
 
+###### mem
+# show  : active memory, free memory, and swap usage
+# mouse : none (todo?)
+# alert : none (todo)
 mem() {
 	case `uname -s` in
 		Linux)
@@ -367,6 +378,10 @@ mem() {
 	echo $mem | awk '{printf "mem ◓ %iM ◌ %iM ◉ %iM", $1, $2, $3}'
 }
 
+###### network
+# show  : rx count and tx count of a network interface
+# mouse : none (todo?)
+# alert : none
 network() {
 	interface='eth0'
 	network_data=`LANG=C ifconfig $interface | awk 'BEGIN { FS = "[()\t]"; } /RX bytes:/ {print $2, $4}'`
@@ -374,6 +389,10 @@ network() {
 	echo $network_data | awk '{printf "'$interface' ➘ %.2f%s ➚ %.2f%s", $1, $2, $3, $4}'
 }
 
+###### power
+# show  : battery level (todo)
+# mouse : none (todo?)
+# alert : none (todo?)
 power() {
 	battery='BAT0'
 	BAT_INFO_FILE = "/proc/acpi/battery/$battery/info"
@@ -383,6 +402,10 @@ power() {
 	# ex : ⚡
 }
 
+###### temperature
+# show  : cpu temperature
+# mouse : none (todo?)
+# alert : none (todo?)
 temperature() {
 	case `uname -s` in
 		Linux)
@@ -399,11 +422,19 @@ temperature() {
 	echo "☕" $temperature
 }
 
+###### time
+# show  : time and date
+# mouse : none (todo)
+# alert : none
 time() {
 	echo "◔" $(date '+%a %d, %b; %R')
 	# todo action : dialog `cal`.sub(/\b#{Time.now.day}\b/) {|s| '-' * s.length }
 }
 
+###### volume
+# show  : percentage of sound volume
+# mouse : none (todo)
+# alert : none
 volume() {
 	case `uname -s` in
 		Linux)

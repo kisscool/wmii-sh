@@ -52,6 +52,20 @@ For example, in order to add the "load" widget with a refresh rate of 30 seconds
 
 	add_widget load 30 10
 
+
+List of Widgets
+---------------
+
+* load
+* disk
+* mem
+* network
+* power (todo)
+* temperature
+* time
+* volume
+
+
 Bug tracking
 ------------
 
