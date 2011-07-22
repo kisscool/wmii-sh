@@ -325,9 +325,10 @@ disk() {
 # show  : local system load average
 # mouse : show top cpu hungry processes
 # alert : when the medium load average is above a critical threshold
+# args  : $1 critical threshold (default 5)
 load() {
 	# limit for changing color
-	critical=5
+	critical=${1-5}
 	# we get the load average
 	case `uname -s` in
 		Linux)
@@ -358,7 +359,7 @@ load() {
 ###### mem
 # show  : active memory, free memory, and swap usage
 # mouse : none (todo?)
-# alert : none (todo)
+# alert : none (todo?)
 mem() {
 	case `uname -s` in
 		Linux)
@@ -372,18 +373,17 @@ mem() {
 			return
 			;;
 	esac
-	# todo : gestion de la couleur
-	# todo : gestion des actions : dialog `ps ux --sort=-pcpu,-vsz || ps ux`
 	# mem ◓ active ◌ free ◉ swap
 	echo $mem | awk '{printf "mem ◓ %iM ◌ %iM ◉ %iM", $1, $2, $3}'
 }
 
 ###### network
 # show  : rx count and tx count of a network interface
-# mouse : none (todo?)
+# mouse : none
 # alert : none
+# args  : $1 name of the network interface (default eth0)
 network() {
-	interface='eth0'
+	interface=${1-'eth0'}
 	network_data=`LANG=C ifconfig $interface | awk 'BEGIN { FS = "[()\t]"; } /RX bytes:/ {print $2, $4}'`
 	# monitored_interface ➘ rx_total ➚ tx_total
 	echo $network_data | awk '{printf "'$interface' ➘ %.2f%s ➚ %.2f%s", $1, $2, $3, $4}'
@@ -424,11 +424,15 @@ temperature() {
 
 ###### time
 # show  : time and date
-# mouse : none (todo)
+# mouse : print current month calendar
 # alert : none
 time() {
 	echo "◔" $(date '+%a %d, %b; %R')
 	# todo action : dialog `cal`.sub(/\b#{Time.now.day}\b/) {|s| '-' * s.length }
+	# we define the user event handler (try cal | xargs -d "\n" wmii9menu --)
+	add_widget_handle time <<'!'
+		cal -3 | xmessage -file - -nearmouse
+!
 }
 
 ###### volume
@@ -450,6 +454,20 @@ volume() {
 	esac
 	echo "♪ " $vol%
 
+	# we define the user event handler (todo : find a way to elegantly do both OS)
+	add_widget_handle volume <<'!'
+		case $1 in      # Which mouse button
+		1)              # Left button
+			amixer sset Master toggle
+			vol | wmiir write /rbar/vol;;
+		4)		# Scroll up
+			amixer sset Master playback 2dB+
+			vol | wmiir write /rbar/vol;;
+		5)		# Scroll down
+			amixer sset Master playback 2dB-
+			vol | wmiir write /rbar/vol;;
+		esac;;
+!
 }
 
 ###############################################################################
