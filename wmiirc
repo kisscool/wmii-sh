@@ -82,16 +82,21 @@ WIDGETS=''
 # - $1 : name of the widget / function
 # - $2 : refresh rate of the widget, 0 for no refresh
 # - $3 : position of the widget among others
-# ex : add_widget load 30 10
+# - $4 and more : arguments passed to the widget, if needed
+# ex : 
+#     add_widget load 30 10
+#     add_widget disk 60 20 /home
 add_widget() {
 	# needed for sub-functions definition, I suspect either black magic or a race condition here
 	$1 >/dev/null
+	# widget arguments extraction
+	widget_args=`echo "$@" | cut -d " " -f 4-`
 	# creation of the widget
-	echo $WMII_NORMCOLORS $1 | wmiir create /rbar/status-$3-$1
+	echo $WMII_NORMCOLORS $1 $widget_args | wmiir create /rbar/status-$3-$1
 	# update of the $WIDGETS list
 	export WIDGETS="$WIDGETS $3-$1"
 	# widget generic loop
-	while $1 | wmiir write /rbar/status-$3-$1 && [ $2 -ne 0 ] ; do #hack possible while echo `eval $2` | ...
+	while $1 $widget_args | wmiir write /rbar/status-$3-$1 && [ $2 -ne 0 ] ; do #hack possible while echo `eval $2` | ...
 		sleep $2
 	done &
 }
