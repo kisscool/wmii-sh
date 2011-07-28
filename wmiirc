@@ -108,11 +108,11 @@ add_widget() {
 # arguments :
 # - $1 : name of the widget
 # ex :
-#     add_widget_handle clock <<!
+#     add_widget_handle clock <<'!'
 #         terminal -hold -e cal -3 &
 #     !
 #
-#     add_widget_handle vol <<!
+#     add_widget_handle vol <<'!'
 #         case $1 in      # Which mouse button
 #             1)          # Left button
 #                 amixer sset Master toggle
@@ -268,6 +268,50 @@ $(widget_handletext)
 eval $(widget_handletext)
 }
 
+
+# another helper you might find a little crazy : its role is to do a (very)
+# basic parsing of JSON input. It is helpful with widgets which need to parse
+# JSON datas, like the transilien() widget. The choice of a sed/awk approach is
+# clearly only driven by the will to keep dependencies as low as possible.
+#
+# I want to emphasize you should probably not reuse this code in another project
+# as this parser is neither complete nor speed efficient. You might also discover it to
+# be horribly broken in some way or another. In real world situations you should just 
+# use a little :
+#   ruby -e "require 'rubygems'; require 'json'; puts JSON[STDIN.read]"
+#
+# arguments :
+# - $1 : the key you want to extract
+# - $2 : the occurence of the key you want to extract, can be void in order to get every occurences
+# ex :
+#   curl --silent http://url/of/api?list=groceries | parse_simple_json cheese 3
+parse_simple_json() {
+	key=$1
+	line_number=$2
+	content=`cat /dev/stdin`;
+	
+	# basically the sed part will take care to transform "key":["plip", "plop"] in "key":"plip plop"
+	# then the awk part will extract "plip plop" from inside the JSON stream 
+	echo $content \
+	| sed -e ':loop' -e 's/\["\([^]]*\),\([^]]*\)\]/["\1\2]/' -e 's/\"\"/ /' -e 't loop' -e 's/\["\([^]]*\)\]/"\1/g' \
+	| awk -v key=$key '
+		BEGIN {
+        		FS=","
+		}
+
+		{
+			gsub(/{|}/,"")
+			for(i=1;i<=NF;i++){
+				if ( $i ~ key ){
+					m=split($i,a,"\":\"")
+					gsub(/[\",]/,"",a[2])
+					print a[2]
+				}
+			}
+		}
+	' \
+	| sed -n ${line_number}p	# take the desired occurence
+}
 
 ###############################################################################
 # Widgets
@@ -472,6 +516,23 @@ volume() {
 			amixer sset Master playback 2dB-
 			vol | wmiir write /rbar/vol;;
 		esac;;
+!
+}
+
+###### transilien (Paris railway system)
+# show  : the next train coming in your station, in real time
+# mouse : print the list of coming trains
+# alert : none
+# args  : $1 station code, you can find at http://sncf.mobi/infotrafic/iphoneapp/gares/index/lastUpdate/
+#         (you must pick the "codeDDG" code, default is Chatelet les Halles "CLX")
+transilien() {
+	station=${1-'CLX'}
+
+	#echo "◔" $(date '+%a %d, %b; %R')
+	# todo action : dialog `cal`.sub(/\b#{Time.now.day}\b/) {|s| '-' * s.length }
+	# we define the user event handler (try cal | xargs -d "\n" wmii9menu --)
+	add_widget_handle time <<'!'
+		cal -3 | xmessage -file - -nearmouse
 !
 }
 
