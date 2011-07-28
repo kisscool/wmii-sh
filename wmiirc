@@ -527,6 +527,35 @@ volume() {
 #         (you must pick the "codeDDG" code, default is Chatelet les Halles "CLX")
 transilien() {
 	station=${1-'CLX'}
+	
+	# get the JSON data
+	json=`curl --silent "http://sncf.mobi/infotrafic/iphoneapp/transilien/?gare=$station"`
+	# number of results
+	json_number=`echo $json | awk 'BEGIN {RS=FS} {if ($0 ~ /numerotrain/) {c++} } END {print c}'`
+	c=0
+	for i in `echo $json | parse_simple_json codevoyageur`; do
+		c=$(($c+1))
+		export json_codevoyageur_$c="$i"
+	done
+
+	c=0
+	IFS='
+'
+	for i in `echo $json | parse_simple_json dessertes`; do
+		c=$(($c+1))
+		export json_dessertes_$c="$i"
+	done
+	unset $IFS
+	c=0
+	for i in `echo $json | parse_simple_json heureprobable`; do
+	        c=$(($c+1))
+	        export json_heureprobable_$c="$i"
+	done
+	c=0
+	for i in `echo $json | parse_simple_json voie`; do
+	        c=$(($c+1))
+	        export json_voie_$c="$i"
+	done
 
 	#echo "◔" $(date '+%a %d, %b; %R')
 	# todo action : dialog `cal`.sub(/\b#{Time.now.day}\b/) {|s| '-' * s.length }
