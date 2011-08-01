@@ -528,14 +528,27 @@ volume() {
 transilien() {
 	station=${1-'CLX'}
 	
+	# the format option can here be short or long
+	get_transilien() {
+		station=${1-'CLX'}
+		format=${2-'short'}
 	# get the JSON data
 	json=`curl --silent "http://sncf.mobi/infotrafic/iphoneapp/transilien/?gare=$station"`
 	# number of results
 	json_number=`echo $json | awk 'BEGIN {RS=FS} {if ($0 ~ /numerotrain/) {c++} } END {print c}'`
+	if [ $json_number -eq 0 ]; then 
+		echo "communication or parsing error"
+		return
+	fi
+	json_codevoyageur=""
+	json_heureprobable=""
+	json_dessertes=""
+	json_voie=""
 	c=0
 	for i in `echo $json | parse_simple_json codevoyageur`; do
 		c=$(($c+1))
 		export json_codevoyageur_$c="$i"
+		export json_codevoyageur="$json_codevoyageur $i"
 	done
 
 	c=0
@@ -556,6 +569,18 @@ transilien() {
 	        c=$(($c+1))
 	        export json_voie_$c="$i"
 	done
+
+	if [ $format = 'short' ] ; then
+		echo "logo $json_codevoyageur_1 $json_heureprobable_1 $json_voie_1"
+	else
+		c=0
+		for i in $json_codevoyageur; do
+			c=$(($c+1))
+			eval 'echo $json_codevoyageur_'$c' $json_heureprobable_'$c' $json_voie_'$c' $json_dessertes_'$c
+		done
+	fi
+
+	}
 
 	#echo "◔" $(date '+%a %d, %b; %R')
 	# todo action : dialog `cal`.sub(/\b#{Time.now.day}\b/) {|s| '-' * s.length }
