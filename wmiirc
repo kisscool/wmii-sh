@@ -363,8 +363,9 @@ parse_simple_json() {
 # show  : used percentage and free size of a mount point
 # mouse : none (todo?)
 # alert : none (todo?)
+# args  : $1 monitored mountpoint (default '/')
 disk() {
-	path=/
+	path=${1-'/'}
 	result=`df -h $path 2>/dev/null | tail -n 1 || df $path | tail -n 1`
 	# monitored_path ◓ used_percentage ◌ free_size
 	echo $result | awk '{print $6, "◓", $5, "◌",$4}'
