@@ -405,7 +405,7 @@ load() {
 
 	# we define the user event handler
 	add_widget_handle load <<'!'
-		top -b -n 1 | head -n 18 | sed 's/:/ /g' | xmessage -file - -nearmouse
+		top -b -n 1 | head -n 18 | sed 's/:/ /g' | xmessage -file - -nearmouse &
 !
 }
 
@@ -475,6 +475,7 @@ power() {
 	below=`echo "$percent_state < $critical" | bc`
 	[ $below -eq 1 ] && color=$WMII_FOCUSCOLORS || color=$WMII_NORMCOLORS
 
+	# then we display the widget
 	echo $color "⚡" $percent_state%
 }
 
@@ -507,7 +508,7 @@ time() {
 	# todo action : dialog `cal`.sub(/\b#{Time.now.day}\b/) {|s| '-' * s.length }
 	# we define the user event handler (try cal | xargs -d "\n" wmii9menu --)
 	add_widget_handle time <<'!'
-		cal -3 | xmessage -file - -nearmouse
+		cal -3 | xmessage -file - -nearmouse &
 !
 }
 
@@ -570,17 +571,12 @@ transilien() {
 		echo "communication or parsing error"
 		return
 	fi
-	json_codevoyageur=""
-	json_heureprobable=""
-	json_dessertes=""
-	json_voie=""
 	# get all the codevoyageur for the given station
 	# codevoyageur are the train name
 	c=0
 	for i in `echo $json | parse_simple_json codevoyageur`; do
 		c=$(($c+1))
 		export json_codevoyageur_$c="$i"
-		export json_codevoyageur="$json_codevoyageur $i"
 	done
 	# get all the dessertes of trains coming in the station
 	# this parsing is uneasy as you can have several dessertes for
@@ -598,7 +594,8 @@ transilien() {
 	c=0
 	for i in `echo $json | parse_simple_json heureprobable`; do
 	        c=$(($c+1))
-	        export json_heureprobable_$c="$i"
+		# we use awk to lose the date and keep only the hour and minutes
+	        export json_heureprobable_$c=`echo $i | awk '{print $2}'`
 	done
 	# get all the voie for each trains coming in the station
 	# there is also a "quai" key in the json stream, but it
@@ -606,29 +603,34 @@ transilien() {
 	c=0
 	for i in `echo $json | parse_simple_json voie`; do
 	        c=$(($c+1))
-	        export json_voie_$c="$i"
+		# sometimes an ']' slips away. Is it a bug in the parser or in
+		# the stream?
+	        export json_voie_$c=`echo $i | sed 's/]//g'`
 	done
 
 	# we define the returned string
 	# the short version is for the widget in itself
 	# the long version is for when the user click on the widget
 	if [ $format = 'short' ] ; then
-		echo "logo $json_codevoyageur_1 $json_heureprobable_1 $json_voie_1"
+		echo "$json_codevoyageur_1 $json_heureprobable_1 $json_voie_1"
 	else
+		echo "CODE HEURE VOIE DESSERTES"
 		c=0
-		for i in $json_codevoyageur; do
+		while [ $c -le $json_number ]; do
 			c=$(($c+1))
-			eval 'echo $json_codevoyageur_'$c' $json_heureprobable_'$c' $json_voie_'$c' $json_dessertes_'$c
+			eval 'echo $json_codevoyageur_'$c' $json_heureprobable_'$c' "   "$json_voie_'$c' $json_dessertes_'$c
 		done
 	fi
 
 	}
 
+	# we display the widget
+	echo "logo" `get_transilien $station short`
 	#echo "◔" $(date '+%a %d, %b; %R')
 	# todo action : dialog `cal`.sub(/\b#{Time.now.day}\b/) {|s| '-' * s.length }
 	# we define the user event handler (try cal | xargs -d "\n" wmii9menu --)
 	add_widget_handle time <<'!'
-		cal -3 | xmessage -file - -nearmouse
+		get_transilien $station long | xmessage -file - -nearmouse &
 !
 }
 
