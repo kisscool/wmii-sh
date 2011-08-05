@@ -317,6 +317,8 @@ parse_simple_json() {
 # Widgets
 ###############################################################################
 
+# note to myself : icones intéressantes : 2000 et quelques
+
 # Status Bar Info
 #status() {
 #	echo -n $(uptime | sed 's/.*://; s/,//g') '|' $(date '+%a %d, %b; %X')
@@ -392,6 +394,7 @@ load() {
 			return
 			;;
 	esac
+
 	# we change the color of the widget if we are above the critical value
 	load_5=`echo $load | awk '{print $2}'`
 	greater=`echo "$load_5 > $critical" | bc`
@@ -441,15 +444,38 @@ network() {
 
 ###### power
 # show  : battery level (todo)
-# mouse : none (todo?)
+# mouse : none
 # alert : none (todo?)
+# args  : $1 name of the device to monitor (default 'BAT0') ; $2 critical level of battery state as a percentage (default 10)
 power() {
-	battery='BAT0'
-	BAT_INFO_FILE = "/proc/acpi/battery/$battery/info"
-	BAT_STATE_FILE = "/proc/acpi/battery/$battery/state"
-	# todo : finir en testant sur portable
-	# iconesi intéressantes : 2000 et quelques
-	# ex : ⚡
+	# name of battery device, can be very different from laptop to laptop
+	battery=${1-'BAT0'}
+	# critical level of battery state (10% by default)
+	critical=${2-10}
+
+	# we get the current battery state as a percentage of its full capacity
+	case `uname -s` in
+		Linux)
+			bat_info_file="/proc/acpi/battery/$battery/info"
+			bat_state_file="/proc/acpi/battery/$battery/state"
+			bat_remaining_capacity=`cat $bat_state_file | grep 'remaining capacity:' | sed 's/ mAh//;s/.* //'`
+			bat_last_full_capacity=`cat $bat_info_file | grep 'last full capacity:' | sed 's/ mAh//;s/.* //'`
+			percent_state=$(($bat_remaining_capacity*100/$bat_last_full_capacity))
+			;;
+		FreeBSD)
+			percent_state='not implemented yet'
+			;;
+		*)
+			echo 'OS not supported'
+			return
+			;;
+	esac
+
+	# we change the color of the widget if we are below the critical value
+	below=`echo "$percent_state < $critical" | bc`
+	[ $below -eq 1 ] && color=$WMII_FOCUSCOLORS || color=$WMII_NORMCOLORS
+
+	echo $color "⚡" $percent_state%
 }
 
 ###### temperature
@@ -502,7 +528,7 @@ volume() {
 			return
 			;;
 	esac
-	echo "♪ " $vol%
+	echo "♪" $vol%
 
 	# we define the user event handler (todo : find a way to elegantly do both OS)
 	add_widget_handle volume <<'!'
