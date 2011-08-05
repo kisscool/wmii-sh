@@ -340,7 +340,7 @@ parse_simple_json() {
 
 ###### disk
 # show  : used percentage and free size of a mount point
-# mouse : none (todo?)
+# mouse : shows a list of every devices (df output)
 # alert : none (todo?)
 # args  : $1 monitored mountpoint (default '/')
 disk() {
@@ -348,6 +348,11 @@ disk() {
 	result=`df -h $path 2>/dev/null | tail -n 1 || df $path | tail -n 1`
 	# monitored_path ◓ used_percentage ◌ free_size
 	echo $result | awk '{print $6, "◓", $5, "◌",$4}'
+
+	# we define the user event handler
+	add_widget_handle disk <<'!'
+		df -h | xmessage -file - -nearmouse &
+!
 }
 
 ###### load
@@ -458,7 +463,7 @@ power() {
 
 ###### temperature
 # show  : cpu temperature
-# mouse : none (todo?)
+# mouse : none
 # alert : none (todo?)
 temperature() {
 	case `uname -s` in
@@ -606,7 +611,7 @@ transilien() {
 	#echo "◔" $(date '+%a %d, %b; %R')
 	# todo action : dialog `cal`.sub(/\b#{Time.now.day}\b/) {|s| '-' * s.length }
 	# we define the user event handler (try cal | xargs -d "\n" wmii9menu --)
-	add_widget_handle time <<'!'
+	add_widget_handle transilien <<'!'
 		get_transilien $station long | xmessage -file - -nearmouse &
 !
 }
