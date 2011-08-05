@@ -317,33 +317,10 @@ parse_simple_json() {
 # Widgets
 ###############################################################################
 
-# note to myself : icones intéressantes : 2000 et quelques
-
-# Status Bar Info
-#status() {
-#	echo -n $(uptime | sed 's/.*://; s/,//g') '|' $(date '+%a %d, %b; %X')
-#}
-#action status &
-
-
-# Clock
-#echo '#000000 #ffffff #000000' clock | wmiir create /rbar/zclock        # Create the widget
-#clock() {
-#	echo $(date '+%a %d, %b; %X')
-#}
-#while clock | wmiir write /rbar/zclock; do
-#	sleep 1
-#done &
-
-# Volume
-#echo $WMII_NORMCOLORS vol | wmiir create /rbar/vol
-#vol() {
-#	#echo vol
-#	echo vol $(amixer get Master | grep % | sed 's/.*\[\(.*\%\)\].*/\1/') %
-#}
-#vol | wmiir write /rbar/vol
-
 ###### note for future interactive widgets
+#
+# interesting unicode characters are roughly around 2000 and more
+#
 # * wimenu
 # yesno() {
 #   cat <<!
@@ -445,7 +422,7 @@ network() {
 ###### power
 # show  : battery level (todo)
 # mouse : none
-# alert : none (todo?)
+# alert : when the remaining power in battery is below a critical threshold
 # args  : $1 name of the device to monitor (default 'BAT0') ; $2 critical level of battery state as a percentage (default 10)
 power() {
 	# name of battery device, can be very different from laptop to laptop
@@ -514,7 +491,7 @@ time() {
 
 ###### volume
 # show  : percentage of sound volume
-# mouse : none (todo)
+# mouse : a left click mute or unmute the sound, a scroll up or a scroll down will change the sound volume
 # alert : none
 volume() {
 	case `uname -s` in
