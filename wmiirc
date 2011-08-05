@@ -347,6 +347,7 @@ disk() {
 	path=${1-'/'}
 	result=`df -h $path 2>/dev/null | tail -n 1 || df $path | tail -n 1`
 	# monitored_path ◓ used_percentage ◌ free_size
+	# symbols to test : ⛃ ⛁ ⛂ ⛀
 	echo $result | awk '{print $6, "◓", $5, "◌",$4}'
 
 	# we define the user event handler
@@ -607,14 +608,29 @@ transilien() {
 	}
 
 	# we display the widget
-	echo "logo" `get_transilien $station short`
-	#echo "◔" $(date '+%a %d, %b; %R')
-	# todo action : dialog `cal`.sub(/\b#{Time.now.day}\b/) {|s| '-' * s.length }
-	# we define the user event handler (try cal | xargs -d "\n" wmii9menu --)
+	echo "Ⓣ" `get_transilien $station short`
+
+	# we define the user event handler
 	add_widget_handle transilien <<'!'
 		get_transilien $station long | xmessage -file - -nearmouse &
 !
 }
+
+
+###### weather
+# show  : 
+# mouse : 
+# alert : none
+time() {
+	# interesting symbols : ☀ ☁ ☂ ☃ ☄ ☔ ☼ 
+	#echo "◔" $(date '+%a %d, %b; %R')
+	# todo action : dialog `cal`.sub(/\b#{Time.now.day}\b/) {|s| '-' * s.length }
+	# we define the user event handler (try cal | xargs -d "\n" wmii9menu --)
+	add_widget_handle time <<'!'
+		cal -3 | xmessage -file - -nearmouse &
+!
+}
+
 
 ###############################################################################
 # Local configuration
