@@ -313,6 +313,32 @@ parse_simple_json() {
 	| sed -n ${line_number}p	# take the desired occurence
 }
 
+# this helper will parse XML inputs
+# as usual not the best tool for the job, but it works
+parse_simple_xml() {
+	key=$1
+	line_number=$2
+	content=`cat /dev/stdin`;
+
+	# basically the same than with the json parser, but much simpler
+	# we just use < and > as fields separators
+	echo $content \
+	| awk -v key=$key '
+		BEGIN {
+			RS="<";
+			FS=">"
+		}
+
+		$1 !~ /\// {
+			if ( $1 ~ key ){
+				print $2;
+			}
+		}
+	' \
+	| sed -n ${line_number}p        # take the desired occurence
+}
+
+
 ###############################################################################
 # Widgets
 ###############################################################################
