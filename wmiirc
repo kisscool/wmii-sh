@@ -633,8 +633,8 @@ transilien() {
 
 	}
 
-	# we display the widget
-	echo "Ⓣ" `get_transilien $station short`
+	# we display the widget (other possibilities : ⇵ ⇶ ≡ ╦ ☇ 
+	echo "⇅" `get_transilien $station short`
 
 	# we define the user event handler
 	add_widget_handle transilien <<'!'
