@@ -325,13 +325,13 @@ parse_simple_xml() {
 	echo $content \
 	| awk -v key=$key '
 		BEGIN {
-			RS="<";
+			RS="<"
 			FS=">"
 		}
 
 		$1 !~ /\// {
 			if ( $1 ~ key ){
-				print $2;
+				print $2
 			}
 		}
 	' \
@@ -564,72 +564,72 @@ volume() {
 #         (you must pick the "codeDDG" code, default is Chatelet les Halles "CLX")
 transilien() {
 	# the station code by default is for Chatelet les Halles
-	station=${1-'CLX'}
+	export station=${1-'CLX'}
 	
 	# this subfunction is too specific to be classified as an helper
 	# so let's define it directly here
-	# the format option can be short or long
+	# the format option can be short or long (default: short)
 	get_transilien() {
 		station=${1-'CLX'}
 		format=${2-'short'}
-	# get the JSON data
-	json=`curl --silent "http://sncf.mobi/infotrafic/iphoneapp/transilien/?gare=$station"`
-	# number of results
-	json_number=`echo $json | awk 'BEGIN {RS=FS} {if ($0 ~ /numerotrain/) {c++} } END {print c}'`
-	if [ $json_number -eq 0 ]; then 
-		echo "communication or parsing error"
-		return
-	fi
-	# get all the codevoyageur for the given station
-	# codevoyageur are the train name
-	c=0
-	for i in `echo $json | parse_simple_json codevoyageur`; do
-		c=$(($c+1))
-		export json_codevoyageur_$c="$i"
-	done
-	# get all the dessertes of trains coming in the station
-	# this parsing is uneasy as you can have several dessertes for
-	# each train. That's why I used the $IFS trick.
-	c=0
-	IFS='
-'
-	for i in `echo $json | parse_simple_json dessertes`; do
-		c=$(($c+1))
-		export json_dessertes_$c="$i"
-	done
-	unset $IFS
-	# get all the heureprobable for each trains coming in the station
-	# this time is updated in real time, so it is pretty accurate
-	c=0
-	for i in `echo $json | parse_simple_json heureprobable`; do
-	        c=$(($c+1))
-		# we use awk to lose the date and keep only the hour and minutes
-	        export json_heureprobable_$c=`echo $i | awk '{print $2}'`
-	done
-	# get all the voie for each trains coming in the station
-	# there is also a "quai" key in the json stream, but it
-	# is far less accurate than this one
-	c=0
-	for i in `echo $json | parse_simple_json voie`; do
-	        c=$(($c+1))
-		# sometimes an ']' slips away. Is it a bug in the parser or in
-		# the stream?
-	        export json_voie_$c=`echo $i | sed 's/]//g'`
-	done
-
-	# we define the returned string
-	# the short version is for the widget in itself
-	# the long version is for when the user click on the widget
-	if [ $format = 'short' ] ; then
-		echo "$json_codevoyageur_1 $json_heureprobable_1 $json_voie_1"
-	else
-		echo "CODE HEURE VOIE DESSERTES"
+		# get the JSON data
+		json=`curl --silent "http://sncf.mobi/infotrafic/iphoneapp/transilien/?gare=$station"`
+		# number of results
+		json_number=`echo $json | awk 'BEGIN {RS=FS} {if ($0 ~ /numerotrain/) {c++} } END {print c}'`
+		if [ $json_number -eq 0 ]; then 
+			echo "communication or parsing error"
+			return
+		fi
+		# get all the codevoyageur for the given station
+		# codevoyageur are the train name
 		c=0
-		while [ $c -le $json_number ]; do
+		for i in `echo $json | parse_simple_json codevoyageur`; do
 			c=$(($c+1))
-			eval 'echo $json_codevoyageur_'$c' $json_heureprobable_'$c' "   "$json_voie_'$c' $json_dessertes_'$c
+			export json_codevoyageur_$c="$i"
 		done
-	fi
+		# get all the dessertes of trains coming in the station
+		# this parsing is uneasy as you can have several dessertes for
+		# each train. That's why I used the $IFS trick.
+		c=0
+		IFS='
+'
+		for i in `echo $json | parse_simple_json dessertes`; do
+			c=$(($c+1))
+			export json_dessertes_$c="$i"
+		done
+		unset $IFS
+		# get all the heureprobable for each trains coming in the station
+		# this time is updated in real time, so it is pretty accurate
+		c=0
+		for i in `echo $json | parse_simple_json heureprobable`; do
+		        c=$(($c+1))
+			# we use awk to lose the date and keep only the hour and minutes
+		        export json_heureprobable_$c=`echo $i | awk '{print $2}'`
+		done
+		# get all the voie for each trains coming in the station
+		# there is also a "quai" key in the json stream, but it
+		# is far less accurate than this one
+		c=0
+		for i in `echo $json | parse_simple_json voie`; do
+		        c=$(($c+1))
+			# sometimes an ']' slips away. Is it a bug in the parser or in
+			# the stream?
+		        export json_voie_$c=`echo $i | sed 's/]//g'`
+		done
+
+		# we define the returned string
+		# the short version is for the widget in itself
+		# the long version is for when the user click on the widget
+		if [ $format = 'short' ] ; then
+			echo "$json_codevoyageur_1 $json_heureprobable_1 $json_voie_1"
+		else
+			echo "CODE HEURE VOIE DESSERTES"
+			c=0
+			while [ $c -le $json_number ]; do
+				c=$(($c+1))
+				eval 'echo $json_codevoyageur_'$c' $json_heureprobable_'$c' "   "$json_voie_'$c' $json_dessertes_'$c
+			done
+		fi
 
 	}
 
@@ -644,16 +644,87 @@ transilien() {
 
 
 ###### weather
-# show  : 
-# mouse : 
+# show  : the current weather in your location, according to the BBC
+# mouse : display the weather forecast for the few next days in your location
 # alert : none
-time() {
+# args  : $1 numeric code of your location, as displayed in the url of http://news.bbc.co.uk/weather/ when you search for it (default '40' : Parise, France)
+weather() {
+	# default location is Paris, France (numeric code 40)
+	export location=${1:-40}
+
+	# this subfunction is too specific to be classified as an helper
+	# so let's define it directly here
+	# the format option can be short or long (default : short)
+	get_weather() {
+		location=${1:-40}
+		format=${2:-'short'}
+
+		# get the XML data
+		if [ $format = 'short' ] ; then
+			xml=`curl --silent "http://newsrss.bbc.co.uk/weather/forecast/$location/ObservationsRSS.xml"`
+		else
+			xml=`curl --silent "http://newsrss.bbc.co.uk/weather/forecast/$location/Next3DaysRSS.xml"`
+		fi
+		# check the retrieval went well
+		echo $xml | grep -q title
+		if [ $? -ne 0 ]; then 
+			echo "communication error"
+			return
+		fi
+
+		# here we parse the XML data then we post-process it
+		# with some awk magic in order to format the short and
+		# the long output
+		echo $xml | parse_simple_xml title \
+		| sed -e 's/&#xB0;/°/g' -e 's/&#37/%/g' \
+		| awk '
+			BEGIN {
+				FS="[:.,(]"
+			}
+
+			$1 ~ /Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday/{
+				day=$1
+				if ($1 ~ / /) { day=""; }
+
+				if (day=="") {
+					state=substr($3,2)
+					temp=substr($4,2)
+				} else {
+					state=substr($2,2)
+					temp_max=substr($4,2, length($4)-2)
+					temp_min=substr($7,2, length($4)-2)
+					temp=temp_min " / " temp_max
+				}
+
+				if (state ~ /sun|clear/){
+					icon="☼"
+				} else if (state ~ /cloud/){
+					icon="☁"
+				} else if (state ~ /rain/){
+					icon="☂"
+				} else if (state ~ /shower|drizzle/){
+					icon="☔"
+				} else if (state ~ /snow/){
+					icon="☃"
+				} else {
+					icon="?"
+				}
+			
+				output=sprintf("%s %s %s %s", day, icon, state, temp)
+				if (day=="") { output=substr(output,2) }
+				print output
+			}
+		'
+
+	}
+
+	# we just call the sub-function in its short form for the widget display
+	get_weather $location 'short'
 	# interesting symbols : ☀ ☁ ☂ ☃ ☄ ☔ ☼ 
-	#echo "◔" $(date '+%a %d, %b; %R')
-	# todo action : dialog `cal`.sub(/\b#{Time.now.day}\b/) {|s| '-' * s.length }
-	# we define the user event handler (try cal | xargs -d "\n" wmii9menu --)
+	
+	# we define the user event handler
 	add_widget_handle time <<'!'
-		cal -3 | xmessage -file - -nearmouse &
+		get_weather $location 'long' | xmessage -file - -nearmouse &
 !
 }
 
