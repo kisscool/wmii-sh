@@ -60,10 +60,12 @@ List of Widgets
 * disk
 * mem
 * network
-* power (todo)
+* power (linux only for now)
 * temperature
 * time
 * volume
+* transilien (Paris transport system, in real time)
+* weather
 
 
 Bug tracking
