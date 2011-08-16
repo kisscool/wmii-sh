@@ -5,8 +5,8 @@ type: :feature
 component: wmii-sh
 release: 
 reporter: KissCool <nobody@nowhere.org>
-status: :unstarted
-disposition: 
+status: :closed
+disposition: :fixed
 creation_time: 2011-07-20 13:12:15.505256 Z
 references: []
 
@@ -20,3 +20,11 @@ log_events:
   - KissCool <nobody@nowhere.org>
   - commented
   - "ideas : wimenu, wmii9menu, xmessage, dmenu"
+- - 2011-08-16 13:14:11.321223 Z
+  - KissCool <nobody@nowhere.org>
+  - commented
+  - "found a way : either xmessage for non-interactive popups, or wmii9menu or wimenu for interactive ones"
+- - 2011-08-16 13:14:30.336680 Z
+  - KissCool <nobody@nowhere.org>
+  - closed with disposition fixed
+  - ""
