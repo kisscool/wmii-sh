@@ -485,7 +485,7 @@ power() {
 	[ $below -eq 1 ] && color=$WMII_FOCUSCOLORS || color=$WMII_NORMCOLORS
 
 	# then we display the widget
-	echo $color "⚡" $percent_state\%
+	echo $color "⚡" $percent_state%
 }
 
 ###### temperature
@@ -538,7 +538,7 @@ volume() {
 			return
 			;;
 	esac
-	echo "♪" $vol\%
+	echo "♪" $vol%
 
 	# we define the user event handler (todo : find a way to elegantly do both OS)
 	add_widget_handle volume <<'!'
