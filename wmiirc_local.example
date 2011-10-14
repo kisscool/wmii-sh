@@ -5,4 +5,4 @@ export WMII_WALLPAPER='/home/kisscool/wallpapers/Scott_Pilgrim_WALLPAPER_by_MIRR
 # add_widget $name $refresh_rate $position
 add_widget load 30 10
 add_widget mem 60 15
-add_widget time 1 60
+add_widget clock 1 60

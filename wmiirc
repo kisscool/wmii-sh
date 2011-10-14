@@ -508,15 +508,15 @@ temperature() {
 	echo "☕" $temperature
 }
 
-###### time
+###### clock
 # show  : time and date
 # mouse : print current month calendar
 # alert : none
-time() {
+clock() {
 	echo "◔" $(date '+%a %d, %b; %R')
 	# todo action : dialog `cal`.sub(/\b#{Time.now.day}\b/) {|s| '-' * s.length }
 	# we define the user event handler (try cal | xargs -d "\n" wmii9menu --)
-	add_widget_handle time <<'!'
+	add_widget_handle clock <<'!'
 		cal -3 | xmessage -file - -nearmouse &
 !
 }

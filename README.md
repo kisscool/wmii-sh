@@ -62,7 +62,7 @@ List of Widgets
 * network
 * power (linux only for now)
 * temperature
-* time
+* clock
 * volume
 * transilien (Paris transport system, in real time)
 * weather
