@@ -87,10 +87,10 @@ WIDGETS=''
 #     add_widget load 30 10
 #     add_widget disk 60 20 /home
 add_widget() {
-	# needed for sub-functions definition, I suspect either black magic or a race condition here
-	$1 >/dev/null
 	# widget arguments extraction
 	widget_args=`echo "$@" | cut -d " " -f 4-`
+	# needed for sub-functions definition, I suspect either black magic or a race condition here
+	$1 $widget_args >/dev/null
 	# creation of the widget
 	echo $WMII_NORMCOLORS $1 $widget_args | wmiir create /rbar/status-$3-$1
 	# update of the $WIDGETS list
