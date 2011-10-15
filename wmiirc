@@ -538,7 +538,7 @@ volume() {
 			return
 			;;
 	esac
-	echo "♪" $vol%
+	echo "♪" $vol
 
 	# we define the user event handler (todo : find a way to elegantly do both OS)
 	add_widget_handle volume <<'!'
