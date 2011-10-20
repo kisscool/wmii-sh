@@ -621,7 +621,7 @@ transilien() {
 		# the short version is for the widget in itself
 		# the long version is for when the user click on the widget
 		if [ $format = 'short' ] ; then
-			echo "$json_codevoyageur_1 $json_heureprobable_1 $json_voie_1"
+			echo "$json_codevoyageur_1 $json_heureprobable_1"
 		else
 			echo "CODE HEURE VOIE DESSERTES"
 			c=0
