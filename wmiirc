@@ -61,6 +61,7 @@ wmiir write /colrules <<!
 !
 
 # Tagging Rules
+# XXX to try : /^google-chrome:/ floating=off
 wmiir write /tagrules <<!
 /MPlayer|VLC/ -> ~
 /gimp/ -> ~
@@ -821,24 +822,6 @@ Event LeftBarMouseDown
 
 Event RightBarMouseDown
 	widget_handle "$@"
-#	case $2 in
-#	vol)
-#		case $1 in      # Which mouse button
-#		1)              # Left button
-#			amixer sset Master toggle
-#			vol | wmiir write /rbar/vol;;
-#		4)		# Scroll up
-#			amixer sset Master playback 2dB+
-#			vol | wmiir write /rbar/vol;;
-#		5)		# Scroll down
-#			amixer sset Master playback 2dB-
-#			vol | wmiir write /rbar/vol;;
-#		esac;;
-#
-#	zclock)
-#		terminal -hold -e cal -3 &;;
-#	esac
-
 
 # Actions
 Action showkeys
